@@ -1,28 +1,40 @@
 import telebot
-import main
+import lowprice
 
-bot = telebot.TeleBot(main.TOKEN, parse_mode=None)
+TOKEN = "1924202795:AAERxHoCbjim_Y0mg_klbVTMXmMQWWp3N1I"
+bot = telebot.TeleBot(TOKEN)
+
+commands = {
+    '/lowprice': 'вывод самых дешёвых отелей в городе',
+    '/highprice': 'вывод самых дорогих отелей в городе',
+    '/bestdeal': 'вывод отелей, наиболее подходящих по цене и расположению от центра',
+    '/history': 'вывод истории поиска отелей'
+}
 
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    global user
-    user = message.from_user.id
-    bot.send_message(user, 'Привет! Я бот по поиску отелей. Введи команду /help')
+    bot.send_message(message.chat.id, 'Привет! Я бот по поиску отелей. '
+                                      'Введите команду /help чтобы увидеть что я могу.')
 
 
-@bot.message_handler(content_types=['text'])
-def get_text_messages(message):
-    if message.text == "/help":
-        bot.send_message(user, "Я отвечаю на следующие команды:\n"
-                               "/help — помощь по командам бота,\n"
-                               "/lowprice — вывод самых дешёвых отелей в городе,\n"
-                               "/highprice — вывод самых дорогих отелей в городе,\n"
-                               "/bestdeal — вывод отелей, наиболее подходящих по цене и расположению "
-                               "от центра.\n "
-                               "/history — вывод истории поиска отелей")
-    else:
-        bot.send_message(user, "Я не понимаю, введите /help")
+@bot.message_handler(commands=['help'])
+def commands_print(message):
+    result = ''
+    for i_key, i_val in commands.items():
+        result += f'{i_key}: {i_val}\n'
+    bot.send_message(message.chat.id, result)
 
 
-bot.polling()
+@bot.message_handler(commands=['lowprice'])
+def lowprice_print(message):
+    msg = bot.send_message(message.chat.id, 'Введите название города')
+    bot.register_next_step_handler(msg, search_lowprice)
+
+
+def search_lowprice(message):
+    result = lowprice.search(message.text)
+    bot.send_message(message.chat.id, result)
+
+
+bot.polling(none_stop=True)
