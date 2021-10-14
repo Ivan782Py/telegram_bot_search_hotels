@@ -1,5 +1,6 @@
 import requests
 import json
+from datetime import datetime, timedelta
 
 
 def location_search(my_city: str) -> dict:
@@ -32,18 +33,22 @@ def hotels_search(city_id: str, price=None) -> dict:
     """
 
     url = "https://hotels4.p.rapidapi.com/properties/list"
+    check_in = datetime.now()
+    check_out = check_in + timedelta(days=7)
+    check_in = check_in.strftime('%Y-%m-%d')
+    check_out = check_out.strftime('%Y-%m-%d')
 
     if price is None:
-        querystring = {"destinationId": city_id, "pageNumber": "1", "pageSize": "25", "checkIn": "2020-01-08",
-                       "checkOut": "2020-01-15", "adults1": "1", "sortOrder": "PRICE",
+        querystring = {"destinationId": city_id, "pageNumber": "1", "pageSize": "25", "checkIn": check_in,
+                       "checkOut": check_out, "adults1": "1", "sortOrder": "PRICE",
                        "locale": "en_US", "currency": "USD"}
     else:
         price_max = price[1]
         price_min = price[0]
         if price_min > price_max:
             price_min, price_max = price_max, price_min
-        querystring = {"destinationId": "1506246", "pageNumber": "1", "pageSize": "25", "checkIn": "2020-01-08",
-                       "checkOut": "2020-01-15", "adults1": "1", "priceMin": price_min, "priceMax": price_max,
+        querystring = {"destinationId": city_id, "pageNumber": "1", "pageSize": "25", "checkIn": check_in,
+                       "checkOut": check_out, "adults1": "1", "priceMin": price_min, "priceMax": price_max,
                        "sortOrder": "PRICE", "locale": "en_US", "currency": "USD"}
     headers = {
         'x-rapidapi-host': "hotels4.p.rapidapi.com",

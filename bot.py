@@ -4,6 +4,8 @@ from _app import config, functions
 
 bot = telebot.TeleBot(config.TOKEN)
 
+history_dict = {'command': [], 'time': [], 'hotels': []}
+
 
 @bot.message_handler(commands=['start', 'help'])
 def commands_print(message):
@@ -22,9 +24,6 @@ def get_command(message):
     global i_command
     i_command = message.text
 
-    if not history_dict:
-        global history_dict
-        history_dict = {'command': [], 'time': [], 'hotels': []}
     my_time = datetime.now()
     my_time = my_time.strftime('%d-%m-%Y %H:%M')
     history_dict['command'].append(i_command)
