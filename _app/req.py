@@ -17,19 +17,24 @@ def location_search(my_city: str) -> dict:
         'x-rapidapi-host': "hotels4.p.rapidapi.com",
         'x-rapidapi-key': "24edd3a4d4mshd18ba19942cd8bbp153e13jsnd97a92cb7c95"
     }
-
-    response = requests.request("GET", url, headers=headers, params=querystring)
-    result = json.loads(response.text)
+    try:
+        response = requests.request("GET", url, headers=headers, params=querystring, timeout=30)
+        if response.status_code == 200:
+            result = json.loads(response.text)
+        else:
+            result = None
+    except:
+        result = None
 
     return result
 
 
-def hotels_search(city_id: str, price=None) -> dict:
+def hotels_search(city_id: str, price=None) -> dict or None:
     """
     Функция для поиска отелей по id города
     :param price: список с диапазоном цен
     :param city_id: id города
-    :return: данные в формате json
+    :return: данные в формате json либо None при отсутствии ответа от API
     """
 
     url = "https://hotels4.p.rapidapi.com/properties/list"
@@ -38,11 +43,11 @@ def hotels_search(city_id: str, price=None) -> dict:
     check_in = check_in.strftime('%Y-%m-%d')
     check_out = check_out.strftime('%Y-%m-%d')
 
-    if price is None:
-        querystring = {"destinationId": city_id, "pageNumber": "1", "pageSize": "25", "checkIn": check_in,
-                       "checkOut": check_out, "adults1": "1", "sortOrder": "PRICE",
-                       "locale": "en_US", "currency": "USD"}
-    else:
+    querystring = {"destinationId": city_id, "pageNumber": "1", "pageSize": "25", "checkIn": check_in,
+                   "checkOut": check_out, "adults1": "1", "sortOrder": "PRICE",
+                   "locale": "en_US", "currency": "USD"}
+
+    if len(price) >= 2:
         price_max = price[1]
         price_min = price[0]
         if price_min > price_max:
@@ -54,9 +59,14 @@ def hotels_search(city_id: str, price=None) -> dict:
         'x-rapidapi-host': "hotels4.p.rapidapi.com",
         'x-rapidapi-key': "24edd3a4d4mshd18ba19942cd8bbp153e13jsnd97a92cb7c95"
     }
-
-    response = requests.request("GET", url, headers=headers, params=querystring)
-    result = json.loads(response.text)
+    try:
+        response = requests.request("GET", url, headers=headers, params=querystring, timeout=30)
+        if response.status_code == 200:
+            result = json.loads(response.text)
+        else:
+            result = None
+    except:
+        result = None
 
     return result
 
@@ -76,7 +86,13 @@ def photo_search(hotel_id: str) -> dict:
         'x-rapidapi-key': "24edd3a4d4mshd18ba19942cd8bbp153e13jsnd97a92cb7c95"
     }
 
-    response = requests.request("GET", url, headers=headers, params=querystring)
-    result = json.loads(response.text)
+    try:
+        response = requests.request("GET", url, headers=headers, params=querystring, timeout=30)
+        if response.status_code == 200:
+            result = json.loads(response.text)
+        else:
+            result = None
+    except:
+        result = None
 
     return result

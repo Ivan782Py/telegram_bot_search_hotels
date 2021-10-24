@@ -1,7 +1,6 @@
-from typing import Optional
-
-from _app import req
 import re
+from typing import Optional
+from _app import req
 
 
 def value_search(data: any, i_key: str) -> any:
@@ -28,22 +27,24 @@ def value_search(data: any, i_key: str) -> any:
     return None
 
 
-def city_check(city_name: str) -> bool:
+def city_check(city_name: str) -> str:
     """
     Функция для проверки наличия города в базе API Hotels
     :param city_name: название города
-    :return: bool
+    :return: bool либо None если не получен ответ от API
     """
+    result = ''
     i_data = req.location_search(my_city=city_name)
-    result = value_search(data=i_data, i_key='entities')
-    if result:
-        return True
-    else:
-        return False
+    if i_data:
+        result = value_search(data=i_data, i_key='entities')
+        if result:
+            result = value_search(data=i_data, i_key='destinationId')
+
+    return result
 
 
 def get_hotels(city: str, num_hotels: str, i_command: str,
-               choice_price: list = None, distance: list = None) -> callable:
+               choice_price: list = None, distance: list = None) -> callable or None:
     """
     Функция приема параметров от бота и вызова функции обработки ответа my_hotels()
     :param city: название города
@@ -51,12 +52,13 @@ def get_hotels(city: str, num_hotels: str, i_command: str,
     :param i_command: команда бота
     :param choice_price: диапазон цен
     :param distance: расстояние от отеля до центра
-    :return: функцию обработки ответа, либо None при ошибке ответа от API
+    :return: функция обработки ответа, либо None при ошибке ответа от API
     """
-    i_data = req.location_search(my_city=city)
-    city_id = value_search(data=i_data, i_key='destinationId')
-    get_req = req.hotels_search(city_id=city_id, price=choice_price)
-    hotels_list = value_search(data=get_req, i_key='results')
+    get_req = req.hotels_search(city_id=city, price=choice_price)
+    if get_req:
+        hotels_list = value_search(data=get_req, i_key='results')
+    else:
+        return None
 
     i_command = i_command[1:]
     data = {'id': [], 'name': [], 'address': [], 'distance': [], 'price': []}
@@ -71,8 +73,7 @@ def get_hotels(city: str, num_hotels: str, i_command: str,
         return None
 
     return my_hotels(data=data, number=num_hotels,
-                     choice=i_command, diapason=distance
-                     )
+                     choice=i_command, diapason=distance)
 
 
 def my_hotels(data: dict, number: str, choice: str, diapason: list) -> Optional[dict[str, list]]:
@@ -82,7 +83,7 @@ def my_hotels(data: dict, number: str, choice: str, diapason: list) -> Optional[
     :param number: число отелей для ответа
     :param choice: команда от юзера
     :param diapason: расстояние от отеля до центра
-    :return:
+    :return: словарь с данными по отелям в указанном городе
     """
     result = {'name': [],
               'address': [],
@@ -110,13 +111,13 @@ def my_hotels(data: dict, number: str, choice: str, diapason: list) -> Optional[
     return result
 
 
-def best_deal(data, my_range, number):
+def best_deal(data: dict, my_range: list, number: str) -> dict:
     """
     Функция обработки команды bestdeal - поиск отелей в указанном диапазоне my_range
     :param data: словарь с данными по отелям в городе в указанном диапазоне цен
     :param my_range: диапазон расстояния от отеля до центра города
     :param number: количество отелей
-    :return: словарь с отфильтрованными отелями
+    :return: словарь с отфильтрованными по критериям пользователя отелями
     """
     dist = data['distance']
     dist_list = []
@@ -151,7 +152,7 @@ def get_photo(hotel_id, total):
     Функция для получения фото по id города
     :param hotel_id: id города
     :param total: количество фотографий
-    :return:
+    :return: словарь с id фото отеля
     """
     total = int(total)
 

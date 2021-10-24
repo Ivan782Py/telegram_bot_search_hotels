@@ -1,5 +1,3 @@
-TOKEN = "1924202795:AAERxHoCbjim_Y0mg_klbVTMXmMQWWp3N1I"
-
 command_list = {
     '/lowprice': 'вывод самых дешёвых отелей в городе',
     '/highprice': 'вывод самых дорогих отелей в городе',
@@ -7,4 +5,19 @@ command_list = {
     '/history': 'вывод истории поиска отелей'
 }
 
-my_stiker = 'CAACAgIAAxkBAAIDRWFoPEAB37gKiyC9y6US7W3dNYT3AAJHAwACbbBCA1JVK_k1xYCCIQQ'
+user_dict = {
+    'command': '',
+    'city': '',
+    'sum_hotels': '',
+    'sum_photo': '',
+    'price_list': [],
+    'dist_list': []
+}
+
+history_dict = {
+    'command': [],
+    'time': [],
+    'hotels': []
+}
+
+my_stiсker = 'CAACAgIAAxkBAAIDRWFoPEAB37gKiyC9y6US7W3dNYT3AAJHAwACbbBCA1JVK_k1xYCCIQQ'

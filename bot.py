@@ -1,10 +1,15 @@
 import telebot
+import os
+import re
+from dotenv import load_dotenv
 from datetime import datetime
 from _app import config, functions
 
-bot = telebot.TeleBot(config.TOKEN)
+load_dotenv()
+bot = telebot.TeleBot(os.getenv("BOT_TOKEN"))
 
-history_dict = {'command': [], 'time': [], 'hotels': []}
+i_user: dict = config.user_dict
+my_history: dict = config.history_dict
 
 
 @bot.message_handler(commands=['start', 'help'])
@@ -21,44 +26,46 @@ def commands_print(message):
 @bot.message_handler(commands=['lowprice', 'highprice', 'bestdeal'])
 def get_command(message):
     """ Получаем название города, сохраняем команду """
-    global i_command
     i_command = message.text
-
+    i_user['command'] = i_command
     my_time = datetime.now()
     my_time = my_time.strftime('%d-%m-%Y %H:%M')
-    history_dict['command'].append(i_command)
-    history_dict['time'].append(my_time)
+    my_history['command'].append(i_command)
+    my_history['time'].append(my_time)
 
     msg = bot.send_message(message.chat.id, 'Введите название города на английском языке (пример: new york)')
     bot.register_next_step_handler(msg, city_search)
 
 
 @bot.message_handler(commands=['history'])
-def my_history(message):
+def search_history(message):
     """ Выводим историю поиска """
-    for i in range(len(history_dict['command'])):
-        i_com = history_dict['command'][i]
-        i_time = history_dict['time'][i]
-        i_hotels_list = history_dict['hotels'][i]
+    if my_history['command']:
+        for i in range(len(my_history['command'])):
+            i_com = my_history['command'][i]
+            i_time = my_history['time'][i]
+            i_hotels_list = my_history['hotels'][i]
 
-        bot.send_message(message.chat.id, f"Команда: {i_com}\n"
-                                          f"Вызвана: {i_time}\n"
-                                          f"Список отелей: {i_hotels_list}")
+            bot.send_message(message.chat.id, f"Команда: {i_com}\n"
+                                              f"Вызвана: {i_time}\n"
+                                              f"Список отелей: {i_hotels_list}")
+    else:
+        bot.send_message(message.chat.id, 'Вы еще ничего не искали!')
 
 
 @bot.message_handler(content_types=['text', 'photo', 'sticker', 'audio'])
 def no_answer(message):
-    """ Запрашиваем ввод команды от пользователя если он что-то ввел другое """
+    """ Запрашиваем ввод команды от пользователя если он ввел что-то непонятное """
     bot.send_message(message.chat.id, 'Не понимаю. Введите /help')
 
 
 def city_search(message):
     """ Проверяем наличие города в базе
       Получаем количество отелей """
-    global city
     city = message.text.lower()
-    result: bool = functions.city_check(city_name=city)
+    result = functions.city_check(city_name=city)
     if result:
+        i_user['city'] = result
         msg = bot.send_message(message.chat.id, 'Введите количество отелей, которые необходимо вывести (не более 10)')
         bot.register_next_step_handler(msg, total_hotels)
     else:
@@ -69,8 +76,8 @@ def city_search(message):
 
 def total_hotels(message):
     """ Получаем условие по выводу фото """
-    global sum_hotels
     sum_hotels = message.text
+    i_user['sum_hotels'] = sum_hotels
     if not sum_hotels.isdigit() or int(sum_hotels) > 10:
         msg = bot.send_message(message.chat.id, 'Ответом должно быть число, не более 10.\n'
                                                 'Попробуйте еще раз.')
@@ -86,7 +93,7 @@ def photo_choice(message):
     if message.text.lower() == 'да':
         msg = bot.send_message(message.chat.id, 'Сколько фотографий показать (не более 5)?')
         bot.register_next_step_handler(msg, total_photo)
-    elif message.text.lower() == 'нет' and i_command != '/bestdeal':
+    elif message.text.lower() == 'нет' and i_user['command'] != '/bestdeal':
         print_result(message)
     elif i_command == '/bestdeal':
         msg = bot.send_message(message.chat.id, 'Введите диапазон цен в $, например 30 - 60:')
@@ -96,34 +103,28 @@ def photo_choice(message):
         bot.register_next_step_handler(msg, photo_choice)
 
 
-sum_photo = None
-
-
 def total_photo(message):
     """ Проверяем ответ по количеству фото
     Если /bestdeal то запрашиваем диапазон цен"""
-    global sum_photo
     sum_photo = message.text
+    i_user['sum_photo'] = sum_photo
     if not sum_photo.isdigit() or int(sum_photo) > 5:
         msg = bot.send_message(message.chat.id, 'Ответом должно быть число, не более 5.\n'
                                                 'Попробуйте еще раз.')
         bot.register_next_step_handler(msg, total_photo)
         return
-    elif i_command == '/bestdeal':
+    elif i_user['command'] == '/bestdeal':
         msg = bot.send_message(message.chat.id, 'Введите диапазон цен в $, например 30 - 60:')
         bot.register_next_step_handler(msg, set_price)
     else:
         print_result(message)
 
 
-price_list = None
-
-
 def set_price(message):
-    """ Получаем диапазон расстояния от отеля до центра города """
-    global price_list
-    price_list = message.text.split('-')
-    price_list = [x.strip() for x in price_list]
+    """ Получаем диапазон цен,
+    запрашиваем диапазон расстояния от отеля до центра города """
+    price_list = re.findall(r"\d+", message.text)
+    i_user['price_list'] = price_list
     if len(price_list) != 2 or not all(i.isdigit() for i in price_list):
         msg = bot.send_message(message.chat.id, 'Так не понимаю, напишите свои числа как в примере:')
         bot.register_next_step_handler(msg, set_price)
@@ -134,14 +135,10 @@ def set_price(message):
         bot.register_next_step_handler(msg, set_distance)
 
 
-dist_list = None
-
-
 def set_distance(message):
     """ Проверяем введенный диапазон расстояния """
-    global dist_list
-    dist_list = message.text.split('-')
-    dist_list = [x.strip() for x in dist_list]
+    dist_list = re.findall(r"[0-9]*[.]?[0-9]+", message.text)
+    i_user['dist_list'] = dist_list
     if len(dist_list) != 2 or not all(float(i) for i in dist_list):
         msg = bot.send_message(message.chat.id, 'Так не понимаю, напишите свои числа как в примере:')
         bot.register_next_step_handler(msg, set_distance)
@@ -152,9 +149,10 @@ def set_distance(message):
 
 def print_result(message):
     """" Выводим результат в чат """
-    my_dict = functions.get_hotels(city=city, num_hotels=sum_hotels, i_command=i_command,
-                                   choice_price=price_list, distance=dist_list
-                                   )
+    print(i_user)
+    my_dict = functions.get_hotels(city=i_user['city'], num_hotels=i_user['sum_hotels'],
+                                   i_command=i_user['command'],
+                                   choice_price=i_user['price_list'], distance=i_user['dist_list'])
 
     hotels_list = []
     if my_dict:
@@ -169,20 +167,20 @@ def print_result(message):
                                               f'Цена за сутки: {price} $')
             hotels_list.append(name)
 
-            if sum_photo:
+            if i_user['sum_photo']:
                 hotel_id = my_dict['id'][i]
-                photo_list = functions.get_photo(hotel_id=hotel_id, total=sum_photo)
+                photo_list = functions.get_photo(hotel_id=hotel_id, total=i_user['sum_photo'])
                 if photo_list:
                     for photo_url in photo_list:
                         bot.send_photo(message.chat.id, photo=photo_url)
                 else:
-                    bot.send_sticker(message.chat.id, send_sticker=config.my_stiker)
+                    bot.send_sticker(message.chat.id, send_sticker=config.my_stiсker)
     else:
         bot.send_message(message.chat.id, 'Не удалось ничего найти :(')
         hotels_list.append('Пусто.')
-    history_dict['hotels'].append(hotels_list)
+    my_history['hotels'].append(hotels_list)
     return
 
 
 if __name__ == '__main__':
-    bot.polling(non_stop=True)
+    bot.polling()
