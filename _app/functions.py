@@ -69,7 +69,8 @@ def get_hotels(city: str, num_hotels: str, i_command: str,
             data['address'].append(value_search(data=elem, i_key='streetAddress'))
             data['distance'].append(value_search(data=elem, i_key='distance'))
             data['price'].append(value_search(data=elem, i_key='exactCurrent'))
-    except:
+    except (ValueError, TypeError) as er:
+        print(er)
         return None
 
     return my_hotels(data=data, number=num_hotels,
@@ -96,8 +97,12 @@ def my_hotels(data: dict, number: str, choice: str, diapason: list) -> Optional[
     if choice == 'highprice':
         i_index = -1
     elif choice == 'bestdeal':
+        print(diapason)
         data: dict = best_deal(data=data, my_range=diapason, number=number)
         number = len(data['id'])
+    elif int(number) > len(data['id']):
+        number = len(data['id'])
+
     if number == 0:
         return None
 
@@ -147,7 +152,7 @@ def best_deal(data: dict, my_range: list, number: str) -> dict:
     return data
 
 
-def get_photo(hotel_id, total):
+def get_photo(hotel_id, total) -> list or None:
     """
     Функция для получения фото по id города
     :param hotel_id: id города
@@ -156,10 +161,10 @@ def get_photo(hotel_id, total):
     """
     total = int(total)
 
-    try:
-        get_req = req.photo_search(hotel_id=hotel_id)
+    get_req = req.photo_search(hotel_id=hotel_id)
+    if get_req:
         photo_list = value_search(data=get_req, i_key='hotelImages')
-    except Exception:
+    else:
         return None
 
     url_list = []
@@ -169,4 +174,5 @@ def get_photo(hotel_id, total):
         i_url = value_search(data=elem, i_key='baseUrl')[:-10] + 'z.jpg'
         url_list.append(i_url)
         total -= 1
+
     return url_list
