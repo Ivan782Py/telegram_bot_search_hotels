@@ -27,11 +27,11 @@ def value_search(data: any, i_key: str) -> any:
     return None
 
 
-def city_check(city_name: str) -> str:
+def city_check(city_name: str) -> str or None:
     """
     Функция для проверки наличия города в базе API Hotels
     :param city_name: название города
-    :return: bool либо None если не получен ответ от API
+    :return: id города либо None если не получен ответ от API
     """
     result = ''
     i_data = req.location_search(my_city=city_name)
@@ -43,12 +43,12 @@ def city_check(city_name: str) -> str:
     return result
 
 
-def get_hotels(city: str, num_hotels: str, i_command: str,
+def get_hotels(city: str, sum_hotels: str, i_command: str,
                choice_price: list = None, distance: list = None) -> callable or None:
     """
     Функция приема параметров от бота и вызова функции обработки ответа my_hotels()
     :param city: название города
-    :param num_hotels: количество отелей
+    :param sum_hotels: количество отелей
     :param i_command: команда бота
     :param choice_price: диапазон цен
     :param distance: расстояние от отеля до центра
@@ -73,7 +73,7 @@ def get_hotels(city: str, num_hotels: str, i_command: str,
         print(er)
         return None
 
-    return my_hotels(data=data, number=num_hotels,
+    return my_hotels(data=data, number=sum_hotels,
                      choice=i_command, diapason=distance)
 
 

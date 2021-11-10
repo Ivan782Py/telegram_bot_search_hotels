@@ -10,12 +10,12 @@ def location_search(my_city: str) -> dict:
     :param my_city: название города
     :return: данные в формате json
     """
-    url = "https://hotels4.p.rapidapi.com/locations/search"
+    url = "https://hotels4.p.rapidapi.com/locations/v2/search"
 
     querystring = {"query": my_city, "locale": "ru_RU"}
 
     try:
-        response = requests.request("GET", url, headers=config.headers, params=querystring, timeout=10)
+        response = requests.request("GET", url, headers=config.headers, params=querystring, timeout=20)
         if response.status_code == 200:
             result = json.loads(response.text)
         else:
@@ -57,7 +57,7 @@ def hotels_search(city_id: str, price=None) -> dict or None:
                        "sortOrder": "PRICE", "locale": "ru_RU", "currency": "USD"}
 
     try:
-        response = requests.request("GET", url, headers=config.headers, params=querystring, timeout=10)
+        response = requests.request("GET", url, headers=config.headers, params=querystring, timeout=20)
         if response.status_code == 200:
             result = json.loads(response.text)
         else:
