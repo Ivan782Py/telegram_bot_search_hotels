@@ -1,6 +1,6 @@
 import re
+import req
 from typing import Optional
-from _app import req
 
 
 def value_search(data: any, i_key: str) -> any:
@@ -39,7 +39,8 @@ def city_check(city_name: str) -> str or None:
         result = value_search(data=i_data, i_key='entities')
         if result:
             result = value_search(data=i_data, i_key='destinationId')
-
+    else:
+        return None
     return result
 
 

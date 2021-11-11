@@ -1,14 +1,15 @@
 import requests
 import json
-from _app import config
+import config
+from bot_func import value_search
 from datetime import datetime, timedelta
 
 
-def location_search(my_city: str) -> dict:
+def location_search(my_city: str) -> dict or None:
     """
     Функция для поиска города по названию
     :param my_city: название города
-    :return: данные в формате json
+    :return: данные в формате json либо None при отсутствии города в даных от API
     """
     url = "https://hotels4.p.rapidapi.com/locations/v2/search"
 
@@ -17,7 +18,12 @@ def location_search(my_city: str) -> dict:
     try:
         response = requests.request("GET", url, headers=config.headers, params=querystring, timeout=20)
         if response.status_code == 200:
-            result = json.loads(response.text)
+            result = None
+            data = json.loads(response.text)
+            data = value_search(data=data, i_key='suggestions')
+            for elem in data:
+                if elem['group'] == 'CITY_GROUP':
+                    result = elem['entities']
         else:
             result = None
     except requests.Timeout as time_end:

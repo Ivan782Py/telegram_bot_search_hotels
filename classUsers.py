@@ -21,16 +21,6 @@ class Users:
 
 class User:
     def __init__(self):
-        # self.user_dict = {
-        #     'command': [],
-        #     'time': [],
-        #     'city_id': None,
-        #     'sum_hotels': None,
-        #     'sum_photo': None,
-        #     'price_list': None,
-        #     'dist_list': None,
-        #     'my_hotels_list': []
-        # }
         self.command = []
         self.time = []
         self.city_id = None

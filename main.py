@@ -1,10 +1,13 @@
 import telebot
 import re
 import os
+import bot_func
+import config
+from classUsers import Users, User
 from dotenv import load_dotenv
 from datetime import datetime
-from _app import config, functions
-from classUsers import Users, User
+from req import location_search
+
 
 load_dotenv()
 bot = telebot.TeleBot(os.getenv("BOT_TOKEN"))
@@ -58,7 +61,7 @@ def city_search(message):
     """ Проверяем наличие города в базе.
       Получаем количество отелей. """
     city = message.text.lower()
-    result = functions.city_check(city_name=city)
+    result = location_search(my_city=city)
     if result:
         user: User = Users.get_user(user_id=message.chat.id)
         user.city_id = result
@@ -154,7 +157,7 @@ def set_distance(message):
 def print_result(message):
     """" Выводим результат в чат. """
     user: User = Users.get_user(user_id=message.chat.id)
-    result = functions.get_hotels(
+    result = bot_func.get_hotels(
         city=user.city_id,
         sum_hotels=user.sum_hotels,
         i_command=user.command[-1],
@@ -175,7 +178,7 @@ def print_result(message):
             hotels_list.append(name)
             if user.sum_photo:
                 hotel_id = result['id'][i]
-                photo_list = functions.get_photo(hotel_id=hotel_id, total=user.sum_photo)
+                photo_list = bot_func.get_photo(hotel_id=hotel_id, total=user.sum_photo)
                 if photo_list:
                     for photo_url in photo_list:
                         bot.send_photo(message.chat.id, photo=photo_url)
