@@ -1,13 +1,11 @@
 import telebot
 import re
 import os
-import bot_func
 import config
+from bot_func import city_check, get_hotels, get_photo
 from classUsers import Users, User
 from dotenv import load_dotenv
 from datetime import datetime
-from req import location_search
-
 
 load_dotenv()
 bot = telebot.TeleBot(os.getenv("BOT_TOKEN"))
@@ -61,20 +59,45 @@ def city_search(message):
     """ Проверяем наличие города в базе.
       Получаем количество отелей. """
     city = message.text.lower()
-    result = location_search(my_city=city)
-    if result:
-        user: User = Users.get_user(user_id=message.chat.id)
-        user.city_id = result
-        msg = bot.send_message(message.chat.id, 'Введите количество отелей, которые необходимо вывести (не более 10):')
-        bot.register_next_step_handler(msg, total_hotels)
+    city_dict: dict = city_check(city_name=city)
+    if city_dict:
+        keyboard = telebot.types.InlineKeyboardMarkup()
+        for loc_id, name in city_dict.items():
+            keyboard.row(telebot.types.InlineKeyboardButton(name, callback_data=loc_id))
+        bot.send_message(message.chat.id, 'Уточните выбор локации:', reply_markup=keyboard)
     else:
         msg = bot.send_message(message.chat.id,
                                f'Не могу найти город {city}, попробуйте изменить название города:')
         bot.register_next_step_handler(msg, city_search)
 
 
+@bot.callback_query_handler(func=lambda call: True)
+def city_callback(query):
+    """ Функция обработки ответов с кнопок:
+    Уточнение локации;
+    Выбор вывода фото. """
+    bot.answer_callback_query(query.id)
+    user: User = Users.get_user(user_id=query.from_user.id)
+    if query.data.isdigit():
+        user.city_id = query.data
+        msg = bot.send_message(query.from_user.id, 'Введите количество отелей, которые необходимо вывести '
+                                                   '(не более 10):')
+        bot.register_next_step_handler(msg, total_hotels)
+    else:
+        if query.data == 'yes':
+            msg = bot.send_message(query.from_user.id, 'Сколько фотографий показать (не более 5)?')
+            bot.register_next_step_handler(msg, total_photo)
+        elif query.data == 'no' and user.command[-1] != '/bestdeal':
+            bot.send_message(query.from_user.id, 'Идет поиск отелей...')
+            print_result(query.message)
+        elif user.command[-1] == '/bestdeal':
+            msg = bot.send_message(query.from_user.id, 'Введите диапазон цен в $, например 30 - 60:')
+            bot.register_next_step_handler(msg, set_price)
+
+
 def total_hotels(message):
-    """ Получаем условие по выводу фото. """
+    """ Сохраняем количество отелей.
+    Получаем условие по выводу фото. """
     sum_hotels = message.text
     if not sum_hotels.isdigit() or int(sum_hotels) > 10:
         msg = bot.send_message(message.chat.id, 'Ответом должно быть число, не более 10.\n'
@@ -84,26 +107,10 @@ def total_hotels(message):
     else:
         user: User = Users.get_user(user_id=message.chat.id)
         user.sum_hotels = sum_hotels
-    msg = bot.send_message(message.chat.id, 'Выводить фото отелей (да/нет)?')
-    bot.register_next_step_handler(msg, photo_choice)
-
-
-def photo_choice(message):
-    """ Проверяем ответ по фото.
-     Если /bestdeal то запрашиваем диапазон цен. """
-    user: User = Users.get_user(user_id=message.chat.id)
-    if message.text.lower() == 'да':
-        msg = bot.send_message(message.chat.id, 'Сколько фотографий показать (не более 5)?')
-        bot.register_next_step_handler(msg, total_photo)
-    elif message.text.lower() == 'нет' and user.command[-1] != '/bestdeal':
-        bot.send_message(message.chat.id, 'Идет поиск отелей...')
-        print_result(message)
-    elif user.command[-1] == '/bestdeal':
-        msg = bot.send_message(message.chat.id, 'Введите диапазон цен в $, например 30 - 60:')
-        bot.register_next_step_handler(msg, set_price)
-    else:
-        msg = bot.send_message(message.chat.id, 'Я не понимаю. Введите да / нет.')
-        bot.register_next_step_handler(msg, photo_choice)
+    keyboard = telebot.types.InlineKeyboardMarkup()
+    keyboard.row(telebot.types.InlineKeyboardButton('Да', callback_data='yes'),
+                 telebot.types.InlineKeyboardButton('Нет', callback_data='no'))
+    bot.send_message(message.chat.id, 'Выводить фото отелей?', reply_markup=keyboard)
 
 
 def total_photo(message):
@@ -151,13 +158,14 @@ def set_distance(message):
         bot.register_next_step_handler(msg, set_distance)
         return
     else:
+        bot.send_message(message.chat.id, 'Идет поиск отелей...')
         print_result(message)
 
 
 def print_result(message):
     """" Выводим результат в чат. """
     user: User = Users.get_user(user_id=message.chat.id)
-    result = bot_func.get_hotels(
+    result = get_hotels(
         city=user.city_id,
         sum_hotels=user.sum_hotels,
         i_command=user.command[-1],
@@ -178,7 +186,7 @@ def print_result(message):
             hotels_list.append(name)
             if user.sum_photo:
                 hotel_id = result['id'][i]
-                photo_list = bot_func.get_photo(hotel_id=hotel_id, total=user.sum_photo)
+                photo_list = get_photo(hotel_id=hotel_id, total=user.sum_photo)
                 if photo_list:
                     for photo_url in photo_list:
                         bot.send_photo(message.chat.id, photo=photo_url)

@@ -27,18 +27,21 @@ def value_search(data: any, i_key: str) -> any:
     return None
 
 
-def city_check(city_name: str) -> str or None:
+def city_check(city_name: str) -> dict or None:
     """
     Функция для проверки наличия города в базе API Hotels
     :param city_name: название города
-    :return: id города либо None если не получен ответ от API
+    :return: словарь с локациями по названию города либо None если города нет в базе API / неудачный запрос к API
     """
-    result = ''
-    i_data = req.location_search(my_city=city_name)
-    if i_data:
-        result = value_search(data=i_data, i_key='entities')
-        if result:
-            result = value_search(data=i_data, i_key='destinationId')
+    result = dict()
+    data = req.location_search(my_city=city_name)
+    if data:
+        data = value_search(data=data, i_key='suggestions')
+        for elem in data:
+            if elem['group'] == 'CITY_GROUP':
+                data = elem['entities']
+        for elem in data:
+            result[elem['destinationId']] = elem['name']
     else:
         return None
     return result
@@ -98,7 +101,6 @@ def my_hotels(data: dict, number: str, choice: str, diapason: list) -> Optional[
     if choice == 'highprice':
         i_index = -1
     elif choice == 'bestdeal':
-        print(diapason)
         data: dict = best_deal(data=data, my_range=diapason, number=number)
         number = len(data['id'])
     elif int(number) > len(data['id']):
