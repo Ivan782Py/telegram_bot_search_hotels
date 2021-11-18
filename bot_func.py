@@ -1,6 +1,10 @@
 import re
 import req
+from loguru import logger
 from typing import Optional
+
+
+logger.add("errors.log")
 
 
 def value_search(data: any, i_key: str) -> any:
@@ -74,7 +78,7 @@ def get_hotels(city: str, sum_hotels: str, i_command: str,
             data['distance'].append(value_search(data=elem, i_key='distance'))
             data['price'].append(value_search(data=elem, i_key='exactCurrent'))
     except (ValueError, TypeError) as er:
-        print(er)
+        logger.exception(er)
         return None
 
     return my_hotels(data=data, number=sum_hotels,

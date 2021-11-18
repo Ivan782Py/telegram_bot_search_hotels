@@ -1,7 +1,11 @@
 import requests
 import json
 import config
+from loguru import logger
 from datetime import datetime, timedelta
+
+
+logger.add("errors.log")
 
 
 def location_search(my_city: str) -> dict or None:
@@ -21,10 +25,10 @@ def location_search(my_city: str) -> dict or None:
         else:
             result = None
     except requests.Timeout as time_end:
-        print(time_end)
+        logger.exception(time_end)
         result = None
     except requests.RequestException as er:
-        print(er)
+        logger.exception(er)
         result = None
 
     return result
@@ -63,10 +67,10 @@ def hotels_search(city_id: str, price=None) -> dict or None:
         else:
             result = None
     except requests.Timeout as time_end:
-        print(time_end)
+        logger.exception(time_end)
         result = None
     except requests.RequestException as er:
-        print(er)
+        logger.exception(er)
         result = None
 
     return result
@@ -90,10 +94,10 @@ def photo_search(hotel_id: str) -> dict or None:
         else:
             result = None
     except requests.Timeout as time_end:
-        print(time_end)
+        logger.exception(time_end)
         result = None
     except requests.RequestException as er:
-        print(er)
+        logger.exception(er)
         result = None
 
     return result

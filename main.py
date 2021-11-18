@@ -193,7 +193,8 @@ def print_result(message):
                 else:
                     bot.send_sticker(message.chat.id, data=config.my_sticker)
     else:
-        bot.send_message(message.chat.id, 'Не удалось ничего найти :(')
+        bot.send_message(message.chat.id, 'Не удалось ничего найти, поробуйте изменить параметры поиска!')
+        commands_print(message)
     user.my_hotels_list.append(hotels_list)
     return
 
