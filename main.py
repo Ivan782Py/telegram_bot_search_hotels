@@ -1,14 +1,15 @@
 import telebot
 import re
-import os
 import config
+from loguru import logger
 from bot_func import city_check, get_hotels, get_photo
 from classUsers import Users, User
-from dotenv import load_dotenv
 from datetime import datetime
 
-load_dotenv()
-bot = telebot.TeleBot(os.getenv("BOT_TOKEN"))
+
+logger.add("errors.log")
+
+bot = telebot.TeleBot(config.bot_token)
 
 
 @bot.message_handler(commands=['start', 'help'])
@@ -200,4 +201,7 @@ def print_result(message):
 
 
 if __name__ == '__main__':
-    bot.polling()
+    try:
+        bot.polling()
+    except Exception as error:
+        logger.exception(error)
