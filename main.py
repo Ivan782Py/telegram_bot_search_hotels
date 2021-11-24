@@ -6,7 +6,6 @@ from bot_func import city_check, get_hotels, get_photo
 from classUsers import Users, User
 from datetime import datetime
 
-
 logger.add("errors.log")
 
 bot = telebot.TeleBot(config.bot_token)
@@ -180,13 +179,19 @@ def print_result(message):
             address = result['address'][i]
             distance = result['distance'][i]
             price = result['price'][i]
+
+            hotel_id = result['id'][i]
+            keyboard = telebot.types.InlineKeyboardMarkup()
+            keyboard.add(telebot.types.InlineKeyboardButton("Перейти на сайт",
+                                                            url=f"https://ru.hotels.com/ho{hotel_id}"))
+
             bot.send_message(message.chat.id, f'Название отеля: {name}\n'
                                               f'Адрес: {address}\n'
                                               f'Расстояние до центра: {distance}\n'
-                                              f'Цена за сутки: {price} $')
+                                              f'Цена за сутки: {price} $', reply_markup=keyboard)
             hotels_list.append(name)
+
             if user.sum_photo:
-                hotel_id = result['id'][i]
                 photo_list = get_photo(hotel_id=hotel_id, total=user.sum_photo)
                 if photo_list:
                     for photo_url in photo_list:
