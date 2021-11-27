@@ -9,9 +9,11 @@ from typing import Optional
 logger.add("errors.log")
 
 
-def api_request(url, querystring) -> Optional[dict]:
+def api_request(url: str, querystring: dict) -> Optional[dict]:
     """
     Функция отправки запроса к API
+    :param url: url запроса
+    :param querystring: параметр запроса в формате словаря
     """
     try:
         response = requests.request("GET", url, headers=config.headers, params=querystring, timeout=20)

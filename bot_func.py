@@ -1,13 +1,13 @@
 import re
 import req
 from loguru import logger
-from typing import Optional, Callable
+from typing import Optional, Callable, Any
 
 
 logger.add("errors.log")
 
 
-def value_search(data: any, i_key: str):
+def value_search(data: Any, i_key: str):
     """
     Функция для рекурсивного поиска значения во вложенных массивах (dict, list).
     :param data: массив данных
@@ -159,7 +159,7 @@ def best_deal(data: dict, my_range: list, number: str) -> dict:
     return data
 
 
-def get_photo(hotel_id, total) -> Optional[list]:
+def get_photo(hotel_id: str, total: str) -> Optional[list]:
     """
     Функция для получения фото по id города
     :param hotel_id: id города

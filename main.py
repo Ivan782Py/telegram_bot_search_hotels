@@ -4,7 +4,7 @@ import config
 from loguru import logger
 from bot_func import city_check, get_hotels, get_photo
 from classUsers import Users, User
-from datetime import datetime
+from datetime import datetime, timedelta
 
 logger.add("errors.log")
 
@@ -173,6 +173,10 @@ def print_result(message):
         distance=user.dist_list
     )
     hotels_list = list()
+    check_in = datetime.now()
+    check_out = check_in + timedelta(days=7)
+    check_in = check_in.strftime('%d-%m-%Y')
+    check_out = check_out.strftime('%d-%m-%Y')
     if result:
         for i in range(len(result['id'])):
             name = result['name'][i]
@@ -188,7 +192,9 @@ def print_result(message):
             bot.send_message(message.chat.id, f'Название отеля: {name}\n'
                                               f'Адрес: {address}\n'
                                               f'Расстояние до центра: {distance}\n'
-                                              f'Цена за сутки: {price} $', reply_markup=keyboard)
+                                              f'Цена за сутки: {price} $\n'
+                                              f'Дата въезда: {check_in}, дата выезда: {check_out}',
+                             reply_markup=keyboard)
             hotels_list.append(name)
 
             if user.sum_photo:
