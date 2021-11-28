@@ -1,9 +1,12 @@
 import re
 import req
-from typing import Optional
+from loguru import logger
+from typing import Optional, Callable, Any, Dict
+
+logger.add("errors.log")
 
 
-def value_search(data: any, i_key: str) -> any:
+def value_search(data: Dict[str, Any], i_key: str):
     """
     Функция для рекурсивного поиска значения во вложенных массивах (dict, list).
     :param data: массив данных
@@ -27,7 +30,7 @@ def value_search(data: any, i_key: str) -> any:
     return None
 
 
-def city_check(city_name: str) -> dict or None:
+def city_check(city_name: str) -> Optional[dict]:
     """
     Функция для проверки наличия города в базе API Hotels
     :param city_name: название города
@@ -48,7 +51,7 @@ def city_check(city_name: str) -> dict or None:
 
 
 def get_hotels(city: str, sum_hotels: str, i_command: str,
-               choice_price: list = None, distance: list = None) -> callable or None:
+               choice_price: list = None, distance: list = None) -> Optional[Callable]:
     """
     Функция приема параметров от бота и вызова функции обработки ответа my_hotels()
     :param city: название города
@@ -74,7 +77,7 @@ def get_hotels(city: str, sum_hotels: str, i_command: str,
             data['distance'].append(value_search(data=elem, i_key='distance'))
             data['price'].append(value_search(data=elem, i_key='exactCurrent'))
     except (ValueError, TypeError) as er:
-        print(er)
+        logger.exception(er)
         return None
 
     return my_hotels(data=data, number=sum_hotels,
@@ -155,7 +158,7 @@ def best_deal(data: dict, my_range: list, number: str) -> dict:
     return data
 
 
-def get_photo(hotel_id, total) -> list or None:
+def get_photo(hotel_id: str, total: str) -> Optional[list]:
     """
     Функция для получения фото по id города
     :param hotel_id: id города

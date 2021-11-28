@@ -1,14 +1,14 @@
 import telebot
 import re
-import os
 import config
+from loguru import logger
 from bot_func import city_check, get_hotels, get_photo
 from classUsers import Users, User
-from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, timedelta
 
-load_dotenv()
-bot = telebot.TeleBot(os.getenv("BOT_TOKEN"))
+logger.add("errors.log")
+
+bot = telebot.TeleBot(config.bot_token)
 
 
 @bot.message_handler(commands=['start', 'help'])
@@ -173,19 +173,34 @@ def print_result(message):
         distance=user.dist_list
     )
     hotels_list = list()
+    check_in = datetime.now()
+    check_out = check_in + timedelta(days=7)
+    check_in = check_in.strftime('%d-%m-%Y')
+    check_out = check_out.strftime('%d-%m-%Y')
     if result:
         for i in range(len(result['id'])):
             name = result['name'][i]
-            address = result['address'][i]
+            if result['address'][i]:
+                address = result['address'][i]
+            else:
+                address = 'Не указан.'
             distance = result['distance'][i]
             price = result['price'][i]
+
+            hotel_id = result['id'][i]
+            keyboard = telebot.types.InlineKeyboardMarkup()
+            keyboard.add(telebot.types.InlineKeyboardButton("Перейти на сайт",
+                                                            url=f"https://ru.hotels.com/ho{hotel_id}"))
+
             bot.send_message(message.chat.id, f'Название отеля: {name}\n'
                                               f'Адрес: {address}\n'
                                               f'Расстояние до центра: {distance}\n'
-                                              f'Цена за сутки: {price} $')
+                                              f'Цена за сутки: {price} $\n'
+                                              f'Дата въезда: {check_in}, дата выезда: {check_out}',
+                             reply_markup=keyboard)
             hotels_list.append(name)
+
             if user.sum_photo:
-                hotel_id = result['id'][i]
                 photo_list = get_photo(hotel_id=hotel_id, total=user.sum_photo)
                 if photo_list:
                     for photo_url in photo_list:
@@ -193,10 +208,14 @@ def print_result(message):
                 else:
                     bot.send_sticker(message.chat.id, data=config.my_sticker)
     else:
-        bot.send_message(message.chat.id, 'Не удалось ничего найти :(')
+        bot.send_message(message.chat.id, 'Не удалось ничего найти, поробуйте изменить параметры поиска!')
+        commands_print(message)
     user.my_hotels_list.append(hotels_list)
     return
 
 
 if __name__ == '__main__':
-    bot.polling()
+    try:
+        bot.polling()
+    except Exception as error:
+        logger.exception(error)

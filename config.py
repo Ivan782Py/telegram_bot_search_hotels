@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+bot_token = os.getenv("BOT_TOKEN")
+
 headers = {
     'x-rapidapi-host': "hotels4.p.rapidapi.com",
     'x-rapidapi-key': os.getenv("API_TOKEN")
