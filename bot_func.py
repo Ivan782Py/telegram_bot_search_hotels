@@ -1,13 +1,12 @@
 import re
 import req
 from loguru import logger
-from typing import Optional, Callable, Any
-
+from typing import Optional, Callable, Any, Dict
 
 logger.add("errors.log")
 
 
-def value_search(data: Any, i_key: str):
+def value_search(data: Dict[str, Any], i_key: str):
     """
     Функция для рекурсивного поиска значения во вложенных массивах (dict, list).
     :param data: массив данных

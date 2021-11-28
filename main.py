@@ -180,7 +180,10 @@ def print_result(message):
     if result:
         for i in range(len(result['id'])):
             name = result['name'][i]
-            address = result['address'][i]
+            if result['address'][i]:
+                address = result['address'][i]
+            else:
+                address = 'Не указан.'
             distance = result['distance'][i]
             price = result['price'][i]
 
