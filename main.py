@@ -104,6 +104,11 @@ def total_hotels(message):
                                                 'Попробуйте еще раз:')
         bot.register_next_step_handler(msg, total_hotels)
         return
+    elif int(sum_hotels) < 1:
+        msg = bot.send_message(message.chat.id, 'Столько не найду:).\n'
+                                                'Попробуйте еще раз:')
+        bot.register_next_step_handler(msg, total_hotels)
+        return
     else:
         user: User = Users.get_user(user_id=message.chat.id)
         user.sum_hotels = sum_hotels
@@ -121,6 +126,11 @@ def total_photo(message):
     user.sum_photo = sum_photo
     if not sum_photo.isdigit() or int(sum_photo) > 5:
         msg = bot.send_message(message.chat.id, 'Ответом должно быть число, не более 5.\n'
+                                                'Попробуйте еще раз.')
+        bot.register_next_step_handler(msg, total_photo)
+        return
+    elif int(sum_photo) < 1:
+        msg = bot.send_message(message.chat.id, 'Столько не могу найти :).\n'
                                                 'Попробуйте еще раз.')
         bot.register_next_step_handler(msg, total_photo)
         return
