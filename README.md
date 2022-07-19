@@ -1,9 +1,9 @@
-# Telegram-бот для поиска отелей.
+# Дипломная работа по курсу Python-basic на платформе Skillbox. Telegram-бот по поиску отелей. #
 
->####Бот осуществляет подбор отелей с сайта [hotels.com](https://ru.hotels.com/) используя открытый [API](https://rapidapi.com/)
+>### Бот осуществляет подбор отелей с сайта [hotels.com](https://ru.hotels.com/) используя открытый [API](https://rapidapi.com/) ###
 
->####Имя бота в telegram: @hotels_dip_bot
-### Команды для управления ботом:
+>#### Имя бота в telegram: @hotels_dip_bot ####
+#### Команды для управления ботом: ####
 - /help
 - /lowprice
 - /highprice
