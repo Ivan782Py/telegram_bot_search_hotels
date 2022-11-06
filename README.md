@@ -1,4 +1,4 @@
-# Дипломная работа по курсу Python-basic на платформе Skillbox. Telegram-бот по поиску отелей. #
+# Telegram-бот по поиску отелей. #
 
 >### Бот осуществляет подбор отелей с сайта [hotels.com](https://ru.hotels.com/) используя открытый [API](https://rapidapi.com/) ###
 
